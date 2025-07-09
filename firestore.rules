@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read and write their own data
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null; // Allow reading for rankings
+    }
+    
+    // Lessons collection - read-only for authenticated users
+    match /lessons/{lessonId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only through server
+    }
+    
+    // Words collection - read-only for authenticated users
+    match /words/{wordId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only through server
+    }
+    
+    // Word search collection - read-only for authenticated users
+    match /word_search/{searchId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Admin only through server
+    }
+    
+    // Leitner cards collection - users can read and write their own cards
+    match /leitner_cards/{document} {
+      allow read: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow write: if request.auth != null && 
+        (resource == null || resource.data.userId == request.auth.uid);
+      allow create: if request.auth != null && request.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
