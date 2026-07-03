@@ -2,16 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { lessonsService } from '../services/firebaseService';
-import { 
-  BookOpen, 
-  CheckCircle, 
-  Circle, 
-  Star, 
-  Play,
-  Clock,
-  Target
-} from 'lucide-react';
-import { calculateProgress, cn } from '../lib/utils';
+import { CheckCircle, Circle, Star, Play, Clock, Target, Lock } from 'lucide-react';
+import { calculateProgress } from '../lib/utils';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const LessonsPage = () => {
@@ -24,239 +16,160 @@ const LessonsPage = () => {
     const fetchLessons = async () => {
       try {
         setLoading(true);
-        const lessonsData = await lessonsService.getAllLessons();
-        setLessons(lessonsData);
-      } catch (error) {
-        console.error('Error fetching lessons:', error);
+        const data = await lessonsService.getAllLessons();
+        setLessons(data);
+      } catch (e) {
+        console.error('Error fetching lessons:', e);
         setError('Failed to load lessons');
       } finally {
         setLoading(false);
       }
     };
-
     fetchLessons();
   }, []);
 
-  const isLessonCompleted = (lessonNumber) => {
-    return userProfile?.completedLessons?.includes(lessonNumber) || false;
-  };
+  const isCompleted = (n) => userProfile?.completedLessons?.includes(n) || false;
+  const isUnlocked  = (n) => n <= 1 || (userProfile?.currentLesson || 1) >= n;
+  const isCurrent   = (n) => (userProfile?.currentLesson || 1) === n;
 
-  const isLessonUnlocked = (lessonNumber) => {
-    if (lessonNumber <= 1) return true;
-    return (userProfile?.currentLesson || 1) >= lessonNumber;
-  };
+  const completedCount    = userProfile?.completedLessons?.length || 0;
+  const progress          = calculateProgress(completedCount, lessons.length);
 
-  const completedLessonsCount = userProfile?.completedLessons?.length || 0;
-  const progressPercentage = calculateProgress(completedLessonsCount, lessons.length);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">{error}</div>
-          <button 
-            onClick={() => window.location.reload()}
-            className="btn btn-primary"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" /></div>;
+  if (error)   return (
+    <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <p style={{ color: 'var(--tg-theme-destructive-text-color, #e53935)' }}>{error}</p>
+      <button onClick={() => window.location.reload()} className="btn btn-primary">Retry</button>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                504 Essential Words Lessons
-              </h1>
-              <p className="mt-2 text-gray-600">
-                Master English vocabulary through structured lessons
-              </p>
+    <div className="tg-page">
+      {/* ── Progress header card ── */}
+      <div className="px-4 pt-4 pb-2">
+        <div className="tg-card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4" style={{ color: 'var(--tg-theme-button-color, #3390ec)' }} />
+              <span className="text-sm font-semibold" style={{ color: 'var(--tg-theme-text-color, #212121)' }}>
+                Your Progress
+              </span>
             </div>
-            <div className="hidden sm:block">
-              <Link 
-                to="/learn"
-                className="btn btn-primary flex items-center space-x-2"
-              >
-                <Play className="w-4 h-4" />
-                <span>Quick Learn</span>
-              </Link>
-            </div>
+            <span className="text-sm font-bold" style={{ color: 'var(--tg-theme-button-color, #3390ec)' }}>
+              {progress}%
+            </span>
           </div>
-
-          {/* Progress Bar */}
-          <div className="mt-6 bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <Target className="w-6 h-6 text-primary-600" />
-                <div>
-                  <h3 className="font-semibold text-gray-900">Your Progress</h3>
-                  <p className="text-sm text-gray-600">
-                    {completedLessonsCount} of {lessons.length} lessons completed
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-primary-600">
-                  {progressPercentage}%
-                </div>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-primary-600 h-3 rounded-full transition-all duration-500"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
+          {/* progress bar */}
+          <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--tg-theme-secondary-bg-color, #f4f4f5)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progress}%`, background: 'var(--tg-theme-button-color, #3390ec)' }}
+            />
           </div>
+          <p className="text-xs mt-1.5" style={{ color: 'var(--tg-theme-hint-color, #707579)' }}>
+            {completedCount} of {lessons.length} lessons completed
+          </p>
         </div>
+      </div>
 
-        {/* Lessons Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {lessons.map((lesson) => {
-            const isCompleted = isLessonCompleted(lesson.number);
-            const isUnlocked = isLessonUnlocked(lesson.number);
-            const isCurrent = (userProfile?.currentLesson || 1) === lesson.number;
+      {/* ── Lessons list ── */}
+      <div className="tg-label">Lessons</div>
+      <div className="px-4 pb-4">
+        <div className="tg-card overflow-hidden">
+          {lessons.map((lesson, idx) => {
+            const done      = isCompleted(lesson.number);
+            const unlocked  = isUnlocked(lesson.number);
+            const current   = isCurrent(lesson.number);
+            const isLast    = idx === lessons.length - 1;
 
             return (
               <div
                 key={lesson.id}
-                className={cn(
-                  "bg-white rounded-lg shadow-sm border-2 transition-all duration-200 hover:shadow-md",
-                  isCompleted 
-                    ? "border-green-200 bg-green-50" 
-                    : isCurrent 
-                      ? "border-primary-200 bg-primary-50" 
-                      : isUnlocked 
-                        ? "border-gray-200 hover:border-primary-200" 
-                        : "border-gray-100 bg-gray-50 opacity-60"
-                )}
+                style={{
+                  borderBottom: isLast ? 'none' : '1px solid var(--tg-theme-secondary-bg-color, #f4f4f5)',
+                }}
               >
-                <div className="p-6">
-                  {/* Lesson Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className={cn(
-                        "w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg",
-                        isCompleted
-                          ? "bg-green-100 text-green-600"
-                          : isCurrent
-                            ? "bg-primary-100 text-primary-600"
-                            : isUnlocked
-                              ? "bg-gray-100 text-gray-600"
-                              : "bg-gray-50 text-gray-400"
-                      )}>
-                        {lesson.number}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900">
-                          {lesson.name}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {lesson.wordCount} words
-                        </p>
-                      </div>
+                {unlocked ? (
+                  <Link
+                    to={`/lessons/${lesson.number}`}
+                    className="flex items-center gap-3 px-4 py-3 transition-all active:opacity-70"
+                    style={{
+                      background: current && !done
+                        ? 'color-mix(in srgb, var(--tg-theme-button-color, #3390ec) 6%, transparent)'
+                        : 'transparent',
+                    }}
+                  >
+                    {/* Lesson number badge */}
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-bold"
+                      style={
+                        done
+                          ? { background: '#dcfce7', color: '#16a34a' }
+                          : current
+                          ? { background: 'color-mix(in srgb, var(--tg-theme-button-color, #3390ec) 15%, transparent)', color: 'var(--tg-theme-button-color, #3390ec)' }
+                          : { background: 'var(--tg-theme-secondary-bg-color, #f4f4f5)', color: 'var(--tg-theme-hint-color, #707579)' }
+                      }
+                    >
+                      {done ? <CheckCircle className="w-5 h-5" style={{ color: '#16a34a' }} /> : lesson.number}
                     </div>
-                    
-                    {/* Status Icon */}
-                    <div>
-                      {isCompleted ? (
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                      ) : isCurrent ? (
-                        <Star className="w-6 h-6 text-primary-500" />
-                      ) : isUnlocked ? (
-                        <Circle className="w-6 h-6 text-gray-400" />
-                      ) : (
-                        <Clock className="w-6 h-6 text-gray-300" />
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Lesson Info */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <BookOpen className="w-4 h-4" />
-                        <span>{lesson.wordCount} words</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4" />
-                        <span>~15 min</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <div>
-                    {isUnlocked ? (
-                      <Link
-                        to={`/lessons/${lesson.number}`}
-                        className={cn(
-                          "w-full flex items-center justify-center space-x-2 font-medium py-3 px-4 rounded-lg transition-colors duration-200",
-                          isCompleted
-                            ? "bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
-                        )}
+                    {/* Lesson info */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-sm font-medium truncate"
+                        style={{ color: 'var(--tg-theme-text-color, #212121)' }}
                       >
-                        <Play className="w-5 h-5" />
-                        <span>
-                          {isCompleted ? 'Review' : isCurrent ? 'Continue' : 'Start'}
+                        {lesson.name}
+                      </p>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <span className="text-xs" style={{ color: 'var(--tg-theme-hint-color, #707579)' }}>
+                          {lesson.wordCount} words
                         </span>
-                      </Link>
-                    ) : (
-                      <div className="btn w-full bg-gray-100 text-gray-400 cursor-not-allowed flex items-center justify-center space-x-2 py-3">
-                        <Clock className="w-5 h-5" />
-                        <span>🔒 Locked</span>
+                        {current && !done && (
+                          <span
+                            className="text-xs font-semibold"
+                            style={{ color: 'var(--tg-theme-button-color, #3390ec)' }}
+                          >
+                            Current
+                          </span>
+                        )}
+                        {done && (
+                          <span className="text-xs font-semibold" style={{ color: '#16a34a' }}>
+                            Completed
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  {/* Status Labels */}
-                  <div className="mt-3 flex justify-center">
-                    {isCompleted && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Completed
-                      </span>
-                    )}
-                    {isCurrent && !isCompleted && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-                        Current
-                      </span>
-                    )}
-                    {!isUnlocked && (
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                        Complete previous lessons
-                      </span>
-                    )}
+                    {/* Action label */}
+                    <span
+                      className="text-xs font-semibold flex-shrink-0"
+                      style={{ color: 'var(--tg-theme-button-color, #3390ec)' }}
+                    >
+                      {done ? 'Review' : current ? 'Continue' : 'Start'} ›
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 px-4 py-3 opacity-40">
+                    <div
+                      className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-sm"
+                      style={{ background: 'var(--tg-theme-secondary-bg-color, #f4f4f5)', color: 'var(--tg-theme-hint-color)' }}
+                    >
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate" style={{ color: 'var(--tg-theme-text-color, #212121)' }}>
+                        {lesson.name}
+                      </p>
+                      <p className="text-xs" style={{ color: 'var(--tg-theme-hint-color, #707579)' }}>
+                        Complete previous lesson to unlock
+                      </p>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })}
-        </div>
-
-        {/* Quick Learn Button for Mobile */}
-        <div className="sm:hidden fixed bottom-20 right-6 z-30">
-          <Link 
-            to="/learn"
-            className="btn btn-primary rounded-full w-14 h-14 flex items-center justify-center shadow-lg"
-          >
-            <Play className="w-6 h-6" />
-          </Link>
         </div>
       </div>
     </div>

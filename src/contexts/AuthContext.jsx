@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(null);
+  const [isTelegramWebApp, setIsTelegramWebApp] = useState(false);
 
   // Create or update user profile in Firestore
   const createUserProfile = async (user, additionalData = {}) => {
@@ -52,6 +53,16 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Error creating user profile:', error);
         toast.error('Error creating profile');
+      }
+    } else if (Object.keys(additionalData).length > 0) {
+      // Update with any additional fields if profile already exists
+      try {
+        await setDoc(userRef, {
+          ...additionalData,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+      } catch (error) {
+        console.error('Error updating existing profile:', error);
       }
     }
     
@@ -216,16 +227,120 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      
-      if (user) {
-        await createUserProfile(user);
-      } else {
-        setUserProfile(null);
+    // 1. Detect Telegram WebApp or Localhost mock
+    const tg = window.Telegram?.WebApp;
+    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isTelegramEnv = !!(tg && tg.initData && tg.initData !== '');
+    const isTMA = isTelegramEnv || isLocalhost;
+    
+    setIsTelegramWebApp(isTMA);
+
+    if (isTMA && tg) {
+      try {
+        tg.ready();
+        tg.expand();
+      } catch (e) {
+        console.error('Telegram WebApp ready/expand error:', e);
       }
-      
+    }
+
+    // 2. Resolve Telegram User
+    let tgUser = tg?.initDataUnsafe?.user;
+    if (!tgUser && isLocalhost) {
+      tgUser = {
+        id: 99999999,
+        first_name: 'Local',
+        last_name: 'Tester',
+        username: 'local_tester'
+      };
+    }
+
+    if (!isTMA || !tgUser) {
       setLoading(false);
+      return;
+    }
+
+    const email = `tg_${tgUser.id}@tg.vocab.local`;
+    const password = `tg_pass_${tgUser.id}_secure_salt_vocab`;
+    const displayName = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || tgUser.username || `User ${tgUser.id}`;
+
+    // 3. Set up Auth state change observer and perform silent Telegram authentication
+    let isInitialAuthCheck = true;
+
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (isInitialAuthCheck) {
+        isInitialAuthCheck = false;
+        
+        // If user is already logged in with the matching Telegram email
+        if (currentUser && currentUser.email === email) {
+          setUser(currentUser);
+          try {
+            await createUserProfile(currentUser, {
+              displayName,
+              telegramId: tgUser.id,
+              telegramUsername: tgUser.username || null,
+              photoURL: tgUser.photo_url || null,
+              updatedAt: serverTimestamp()
+            });
+          } catch (profileError) {
+            console.error('Error creating user profile in initial load:', profileError);
+          } finally {
+            setLoading(false);
+          }
+        } else {
+          // If logged in with a different user, sign out first
+          if (currentUser) {
+            await signOut(auth);
+          }
+          
+          // Perform silent login
+          try {
+            const result = await signInWithEmailAndPassword(auth, email, password);
+            setUser(result.user);
+            await createUserProfile(result.user, {
+              displayName,
+              telegramId: tgUser.id,
+              telegramUsername: tgUser.username || null,
+              photoURL: tgUser.photo_url || null,
+              updatedAt: serverTimestamp()
+            });
+          } catch (loginError) {
+            // If user doesn't exist, register
+            if (loginError.code === 'auth/user-not-found' || loginError.code === 'auth/invalid-credential' || loginError.code === 'auth/wrong-password') {
+              try {
+                const result = await createUserWithEmailAndPassword(auth, email, password);
+                if (displayName) {
+                  await updateProfile(result.user, { displayName });
+                }
+                setUser(result.user);
+                await createUserProfile(result.user, {
+                  displayName,
+                  telegramId: tgUser.id,
+                  telegramUsername: tgUser.username || null,
+                  photoURL: tgUser.photo_url || null,
+                  createdAt: serverTimestamp(),
+                  updatedAt: serverTimestamp()
+                });
+              } catch (registerError) {
+                console.error('Telegram silent registration failed:', registerError);
+                toast.error('Failed to register Telegram account');
+              }
+            } else {
+              console.error('Telegram silent login failed:', loginError);
+              toast.error('Failed to log in to Telegram account');
+            }
+          }
+          setLoading(false);
+        }
+      } else {
+        setUser(currentUser);
+        if (currentUser) {
+          await createUserProfile(currentUser);
+        } else {
+          setUserProfile(null);
+        }
+        setLoading(false);
+      }
     });
 
     return unsubscribe;
@@ -235,6 +350,7 @@ export const AuthProvider = ({ children }) => {
     user,
     userProfile,
     loading,
+    isTelegramWebApp,
     signUp,
     signIn,
     signInWithGoogle,

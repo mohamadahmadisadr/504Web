@@ -12,7 +12,7 @@ import {
   Globe,
   Star
 } from 'lucide-react';
-import { playAudio, cn } from '../lib/utils';
+import { playSpeech, cn } from '../lib/utils';
 import LoadingSpinner from '../components/LoadingSpinner';
 import WordCard from '../components/WordCard';
 
@@ -96,114 +96,103 @@ const LessonDetailPage = () => {
       </div>
     );
   }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm sticky top-16 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {/* Mobile Layout */}
-          <div className="sm:hidden">
-            {/* Top Row: Back button and Complete lesson button */}
-            <div className="flex items-center justify-between mb-3">
-              <Link 
-                to="/lessons"
-                className="btn btn-outline btn-sm flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </Link>
-              
-              {!isLessonCompleted() && (
-                <button
-                  onClick={handleCompleteLesson}
-                  className="btn btn-primary btn-sm flex items-center space-x-2"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="hidden xs:inline">Complete</span>
-                </button>
-              )}
-            </div>
-            
-            {/* Second Row: Lesson title */}
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                {lesson.name}
-              </h1>
-              <p className="text-sm text-gray-600">
-                {words.length} words • {isLessonCompleted() ? 'Completed' : 'In Progress'}
-              </p>
-            </div>
+    <div className="tg-page">
+      {/* Redesigned Premium Header Nav Bar */}
+      <div 
+        className="sticky top-0 z-40 border-b flex items-center justify-between px-4 py-2.5" 
+        style={{ background: 'var(--tg-theme-bg-color)', borderColor: 'var(--tg-theme-secondary-bg-color)' }}
+      >
+        <Link 
+          to="/lessons" 
+          className="flex items-center text-sm font-semibold gap-1"
+          style={{ color: 'var(--tg-theme-button-color, #3390ec)' }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          {/* View Mode Toggle */}
+          <div className="flex items-center rounded-lg p-0.5" style={{ background: 'var(--tg-theme-secondary-bg-color, #f4f4f5)' }}>
+            <button
+              onClick={() => setViewMode('grid')}
+              className="px-2.5 py-1 text-xs font-bold rounded-md transition-all duration-150"
+              style={
+                viewMode === 'grid'
+                  ? {
+                      background: 'var(--tg-theme-bg-color, #ffffff)',
+                      color: 'var(--tg-theme-button-color, #3390ec)',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                    }
+                  : {
+                      color: 'var(--tg-theme-hint-color, #707579)'
+                    }
+              }
+            >
+              Grid
+            </button>
+            <button
+              onClick={() => setViewMode('card')}
+              className="px-2.5 py-1 text-xs font-bold rounded-md transition-all duration-150"
+              style={
+                viewMode === 'card'
+                  ? {
+                      background: 'var(--tg-theme-bg-color, #ffffff)',
+                      color: 'var(--tg-theme-button-color, #3390ec)',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                    }
+                  : {
+                      color: 'var(--tg-theme-hint-color, #707579)'
+                    }
+              }
+            >
+              Cards
+            </button>
           </div>
 
-          {/* Desktop Layout */}
-          <div className="hidden sm:flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link 
-                to="/lessons"
-                className="btn btn-outline btn-sm flex items-center space-x-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back</span>
-              </Link>
-              
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {lesson.name}
-                </h1>
-                <p className="text-gray-600">
-                  {words.length} words • {isLessonCompleted() ? 'Completed' : 'In Progress'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              {/* View Mode Toggle */}
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={cn(
-                    "btn btn-sm",
-                    viewMode === 'grid' ? 'btn-primary' : 'btn-outline'
-                  )}
-                >
-                  Grid
-                </button>
-                <button
-                  onClick={() => setViewMode('card')}
-                  className={cn(
-                    "btn btn-sm",
-                    viewMode === 'card' ? 'btn-primary' : 'btn-outline'
-                  )}
-                >
-                  Cards
-                </button>
-              </div>
-
-              {/* Complete Lesson Button */}
-              {!isLessonCompleted() && (
-                <button
-                  onClick={handleCompleteLesson}
-                  className="btn btn-primary flex items-center space-x-2"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Complete Lesson</span>
-                </button>
-              )}
-            </div>
-          </div>
+          {!isLessonCompleted() ? (
+            <button
+              onClick={handleCompleteLesson}
+              className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+              style={{ background: '#22c55e', color: '#ffffff' }}
+              title="Complete Lesson"
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Finish</span>
+            </button>
+          ) : (
+            <span
+              className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 bg-green-100 text-green-700"
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              <span>Done</span>
+            </span>
+          )}
         </div>
+      </div>
+
+      {/* Page Content Title Block */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-1">
+        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: 'var(--tg-theme-text-color)' }}>
+          {lesson.name}
+        </h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--tg-theme-hint-color)' }}>
+          {words.length} words • {isLessonCompleted() ? 'Completed' : 'In Progress'}
+        </p>
       </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {viewMode === 'grid' ? (
-          // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <>
+            {/* Grid View */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {words.map((word, index) => (
               <div
                 key={word.id}
-                className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer"
+                className="tg-card shadow-sm border hover:shadow-md transition-shadow cursor-pointer overflow-hidden"
+                style={{ borderColor: 'var(--tg-theme-secondary-bg-color)' }}
                 onClick={() => {
                   setSelectedWord(word);
                   setCurrentWordIndex(index);
@@ -213,16 +202,17 @@ const LessonDetailPage = () => {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                        <span className="font-semibold text-primary-600">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                           style={{ background: 'color-mix(in srgb, var(--tg-theme-button-color, #3390ec) 15%, transparent)' }}>
+                        <span className="font-bold text-sm" style={{ color: 'var(--tg-theme-button-color)' }}>
                           {word.priority}
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-bold" style={{ color: 'var(--tg-theme-text-color)' }}>
                           {word.word}
                         </h3>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm" style={{ color: 'var(--tg-theme-hint-color)' }}>
                           {word.spell}
                         </p>
                       </div>
@@ -231,7 +221,7 @@ const LessonDetailPage = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        playAudio(word.media?.pronunciation || word.accents?.american || word.accents?.british);
+                        playSpeech(word.word, 'en-US');
                       }}
                       className="btn btn-outline btn-sm rounded-full w-10 h-10 p-0"
                     >
@@ -241,33 +231,38 @@ const LessonDetailPage = () => {
 
                   <div className="space-y-3">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Definition</h4>
-                      <p className="text-sm text-gray-600">
+                      <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--tg-theme-text-color)' }}>Definition</h4>
+                      <p className="text-sm" style={{ color: 'var(--tg-theme-hint-color)' }}>
                         {word.englishExplanation}
                       </p>
                     </div>
                     
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">Translation</h4>
-                      <p className="text-sm text-gray-600 text-right font-persian" dir="rtl">
+                      <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--tg-theme-text-color)' }}>Translation</h4>
+                      <p className="text-sm text-right font-persian" dir="rtl" style={{ color: 'var(--tg-theme-text-color)' }}>
                         {word.persianTranslation}
                       </p>
                     </div>
 
                     {word.synonyms && word.synonyms.length > 0 && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-700 mb-1">Synonyms</h4>
+                        <h4 className="text-sm font-semibold mb-1" style={{ color: 'var(--tg-theme-text-color)' }}>Synonyms</h4>
                         <div className="flex flex-wrap gap-1">
                           {word.synonyms.slice(0, 3).map((synonym, idx) => (
                             <span
                               key={idx}
-                              className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded"
+                              className="inline-block px-2 py-1 text-xs rounded font-semibold"
+                              style={{
+                                background: 'color-mix(in srgb, var(--tg-theme-button-color, #3390ec) 12%, transparent)',
+                                color: 'var(--tg-theme-button-color)'
+                              }}
                             >
                               {synonym}
                             </span>
                           ))}
                           {word.synonyms.length > 3 && (
-                            <span className="inline-block px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                            <span className="inline-block px-2 py-1 text-xs rounded font-semibold"
+                                  style={{ background: 'var(--tg-theme-secondary-bg-color)', color: 'var(--tg-theme-hint-color)' }}>
                               +{word.synonyms.length - 3} more
                             </span>
                           )}
@@ -276,12 +271,13 @@ const LessonDetailPage = () => {
                     )}
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+                  <div className="mt-4 pt-4 flex items-center justify-between text-sm"
+                       style={{ borderTop: '1px solid var(--tg-theme-secondary-bg-color)', color: 'var(--tg-theme-hint-color)' }}>
                     <div className="flex items-center space-x-4">
                       <span>{word.examples?.length || 0} examples</span>
                       <span>{word.videos?.length || 0} videos</span>
                     </div>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1 font-semibold" style={{ color: 'var(--tg-theme-button-color)' }}>
                       <Play className="w-3 h-3" />
                       <span>View Details</span>
                     </div>
@@ -290,13 +286,50 @@ const LessonDetailPage = () => {
               </div>
             ))}
           </div>
+
+          {/* Prominent completion call-to-action */}
+          {!isLessonCompleted() ? (
+            <div className="mt-8 p-6 tg-card border text-center space-y-4" style={{ borderColor: 'var(--tg-theme-secondary-bg-color)' }}>
+              <div className="inline-flex p-3 rounded-full bg-green-500/10 text-green-600">
+                <CheckCircle className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-extrabold" style={{ color: 'var(--tg-theme-text-color)' }}>
+                  Finished studying all words?
+                </h3>
+                <p className="text-xs" style={{ color: 'var(--tg-theme-hint-color)' }}>
+                  Mark this lesson as completed to unlock the next one and earn +50 points!
+                </p>
+              </div>
+              <button
+                onClick={handleCompleteLesson}
+                className="w-full sm:w-auto px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5 mx-auto"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>Mark Lesson as Completed (+50 pts)</span>
+              </button>
+            </div>
+          ) : (
+            <div className="mt-8 p-5 tg-card border text-center space-y-2" style={{ borderColor: 'rgba(34, 197, 94, 0.2)', background: 'color-mix(in srgb, #22c55e 5%, transparent)' }}>
+              <div className="inline-flex text-green-600">
+                <CheckCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-sm font-extrabold text-green-700">
+                Lesson Completed!
+              </h3>
+              <p className="text-[11px]" style={{ color: 'var(--tg-theme-hint-color)' }}>
+                You have finished this lesson and claimed your points. Great job!
+              </p>
+            </div>
+          )}
+          </>
         ) : (
           // Card View
           <div className="max-w-4xl mx-auto">
             {selectedWord && (
-              <div className="bg-white rounded-lg shadow-lg">
+              <div className="tg-card shadow-lg border overflow-hidden" style={{ borderColor: 'var(--tg-theme-secondary-bg-color)' }}>
                 {/* Navigation */}
-                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                <div className="p-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--tg-theme-secondary-bg-color)' }}>
                   <button
                     onClick={() => navigateWord('prev')}
                     disabled={currentWordIndex === 0}
@@ -306,18 +339,33 @@ const LessonDetailPage = () => {
                   </button>
                   
                   <div className="text-center">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm font-semibold" style={{ color: 'var(--tg-theme-hint-color)' }}>
                       {currentWordIndex + 1} of {words.length}
                     </span>
                   </div>
                   
-                  <button
-                    onClick={() => navigateWord('next')}
-                    disabled={currentWordIndex === words.length - 1}
-                    className="btn btn-outline btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
+                  {currentWordIndex === words.length - 1 ? (
+                    !isLessonCompleted() ? (
+                      <button
+                        onClick={handleCompleteLesson}
+                        className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition-all active:scale-95 flex items-center gap-1 shadow-sm"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>Finish</span>
+                      </button>
+                    ) : (
+                      <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                        Completed
+                      </span>
+                    )
+                  ) : (
+                    <button
+                      onClick={() => navigateWord('next')}
+                      className="btn btn-outline btn-sm"
+                    >
+                      Next
+                    </button>
+                  )}
                 </div>
 
                 {/* Word Card */}
@@ -326,20 +374,6 @@ const LessonDetailPage = () => {
             )}
           </div>
         )}
-      </div>
-
-      {/* Floating Action Button for Mobile */}
-      <div className="sm:hidden fixed bottom-20 right-6 z-30">
-        <button
-          onClick={() => setViewMode(viewMode === 'grid' ? 'card' : 'grid')}
-          className="btn btn-primary rounded-full w-14 h-14 flex items-center justify-center shadow-lg"
-        >
-          {viewMode === 'grid' ? (
-            <BookOpen className="w-6 h-6" />
-          ) : (
-            <Globe className="w-6 h-6" />
-          )}
-        </button>
       </div>
     </div>
   );

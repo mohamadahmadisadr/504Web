@@ -1,110 +1,72 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { 
-  Home,
-  BookOpen,
-  GraduationCap,
-  Trophy,
-  Brain
-} from 'lucide-react';
-import { cn } from '../lib/utils';
+import { BookOpen, GraduationCap, Trophy, Brain, User } from 'lucide-react';
+
+const navItems = [
+  { path: '/lessons',  label: 'Lessons',  icon: BookOpen },
+  { path: '/learn',    label: 'Learn',    icon: GraduationCap },
+  { path: '/leitner',  label: 'Leitner',  icon: Brain },
+  { path: '/ranking',  label: 'Ranking',  icon: Trophy },
+  { path: '/profile',  label: 'Profile',  icon: User },
+];
 
 const MobileBottomNav = () => {
-  const { user } = useAuth();
   const location = useLocation();
 
-  // Don't show on auth pages
-  if (location.pathname === '/login' || location.pathname === '/register') {
-    return null;
-  }
-
-  const navItems = [
-    { 
-      path: '/', 
-      label: 'Home', 
-      icon: Home 
-    },
-    { 
-      path: '/lessons', 
-      label: 'Lessons', 
-      icon: BookOpen, 
-      protected: true 
-    },
-    { 
-      path: '/learn', 
-      label: 'Learn', 
-      icon: GraduationCap, 
-      protected: true 
-    },
-    { 
-      path: '/leitner', 
-      label: 'Leitner', 
-      icon: Brain, 
-      protected: true 
-    },
-    { 
-      path: '/ranking', 
-      label: 'Ranking', 
-      icon: Trophy, 
-      protected: true 
-    }
-  ];
-
-  const isActivePath = (path) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
-    return location.pathname.startsWith(path);
-  };
-
-  // Filter items based on authentication
-  const visibleItems = navItems.filter(item => {
-    if (item.protected && !user) return false;
-    return true;
-  });
+  const isActive = (path) => location.pathname.startsWith(path);
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40 safe-area-pb">
-      <div className="flex items-center justify-around px-2">
-        {visibleItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = isActivePath(item.path);
-          
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 safe-area-pb"
+      style={{
+        background: 'var(--tg-theme-bg-color, #ffffff)',
+        borderTop: '1px solid var(--tg-theme-secondary-bg-color, #e5e7eb)',
+      }}
+    >
+      <div className="flex items-stretch">
+        {navItems.map(({ path, label, icon: Icon }) => {
+          const active = isActive(path);
           return (
             <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex flex-col items-center justify-center py-3 px-2 min-w-0 flex-1 transition-all duration-200",
-                isActive 
-                  ? "text-primary-600 transform scale-105" 
-                  : "text-gray-500 hover:text-gray-700 active:scale-95"
-              )}
+              key={path}
+              to={path}
+              className="relative flex-1 flex flex-col items-center justify-center py-2 gap-0.5 transition-all duration-150 active:scale-95"
+              style={{
+                color: active
+                  ? 'var(--tg-theme-button-color, #3390ec)'
+                  : 'var(--tg-theme-hint-color, #707579)',
+                minHeight: 56,
+              }}
             >
-              <div className={cn(
-                "relative transition-all duration-200",
-                isActive && "transform -translate-y-0.5"
-              )}>
-                <Icon className={cn(
-                  "w-6 h-6 mb-1 transition-all duration-200",
-                  isActive && "w-7 h-7"
-                )} />
-                {isActive && (
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary-600 rounded-full"></div>
-                )}
-              </div>
-              <span className={cn(
-                "text-xs font-medium truncate transition-all duration-200",
-                isActive && "font-semibold"
-              )}>
-                {item.label}
+              <Icon
+                className="transition-all duration-150"
+                style={{
+                  width: active ? 26 : 22,
+                  height: active ? 26 : 22,
+                  strokeWidth: active ? 2.2 : 1.8,
+                }}
+              />
+              <span
+                className="transition-all duration-150"
+                style={{
+                  fontSize: active ? '10px' : '9.5px',
+                  fontWeight: active ? 600 : 400,
+                  lineHeight: 1,
+                }}
+              >
+                {label}
               </span>
+              {active && (
+                <div
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
+                  style={{ background: 'var(--tg-theme-button-color, #3390ec)' }}
+                />
+              )}
             </Link>
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 };
 

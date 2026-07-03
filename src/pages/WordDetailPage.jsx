@@ -56,34 +56,39 @@ const WordDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm sticky top-16 z-40">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center space-x-4">
-            <Link 
-              to={`/lessons/${word.lessonNumber}`}
-              className="btn btn-outline btn-sm flex items-center space-x-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to {word.lessonName}</span>
-            </Link>
-            
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {word.word}
-              </h1>
-              <p className="text-gray-600">
-                {word.lessonName} • Word {word.priority}
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="tg-page">
+      {/* Redesigned Premium Header Nav Bar */}
+      <div 
+        className="sticky top-0 z-40 border-b flex items-center justify-between px-4 py-2.5" 
+        style={{ background: 'var(--tg-theme-bg-color)', borderColor: 'var(--tg-theme-secondary-bg-color)' }}
+      >
+        <Link 
+          to={`/lessons/${word.lessonNumber}`} 
+          className="flex items-center text-sm font-semibold gap-1"
+          style={{ color: 'var(--tg-theme-button-color, #3390ec)' }}
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back</span>
+        </Link>
+        <span className="text-sm font-bold" style={{ color: 'var(--tg-theme-text-color)' }}>
+          Word Details
+        </span>
+        <div className="w-12 h-4"></div> {/* Balance flexbox spacing */}
+      </div>
+
+      {/* Page Content Title Block */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-1">
+        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: 'var(--tg-theme-text-color)' }}>
+          {word.word}
+        </h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--tg-theme-hint-color)' }}>
+          {word.lessonName} • Word {word.priority}
+        </p>
       </div>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-lg">
+        <div className="tg-card shadow-lg border overflow-hidden" style={{ borderColor: 'var(--tg-theme-secondary-bg-color)' }}>
           <WordCard word={word} />
         </div>
       </div>

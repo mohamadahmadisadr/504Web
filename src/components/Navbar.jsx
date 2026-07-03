@@ -6,7 +6,6 @@ import {
   Trophy, 
   User, 
   LogOut,
-  Home,
   GraduationCap,
   Brain
 } from 'lucide-react';
@@ -23,7 +22,6 @@ const Navbar = () => {
   };
 
   const navItems = [
-    { path: '/', label: 'Home', icon: Home },
     { path: '/lessons', label: 'Lessons', icon: BookOpen, protected: true },
     { path: '/learn', label: 'Learn', icon: GraduationCap, protected: true },
     { path: '/leitner', label: 'Leitner Box', icon: Brain, protected: true },
@@ -32,19 +30,16 @@ const Navbar = () => {
   ];
 
   const isActivePath = (path) => {
-    if (path === '/') {
-      return location.pathname === '/';
-    }
     return location.pathname.startsWith(path);
   };
 
   return (
-    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
+    <nav className="shadow-sm fixed top-0 left-0 right-0 z-50" style={{ background: 'var(--tg-theme-header-bg-color, var(--tg-theme-bg-color, #ffffff))', borderBottom: '1px solid var(--tg-theme-secondary-bg-color, #e5e7eb)' }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link 
-            to="/" 
+            to="/lessons" 
             className="flex items-center space-x-2 text-primary-600 font-bold text-xl"
           >
             <BookOpen className="w-8 h-8" />
@@ -88,64 +83,26 @@ const Navbar = () => {
                   </div>
                 )}
                 
-                {/* Profile Menu */}
-                <div className="relative group">
-                  <button className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors">
-                    {userProfile?.photoURL ? (
-                      <img 
-                        src={userProfile.photoURL} 
-                        alt="Profile" 
-                        className="w-8 h-8 rounded-full"
-                      />
-                    ) : (
-                      <User className="w-8 h-8 p-2 bg-gray-100 rounded-full" />
-                    )}
-                    <span className="font-medium">
-                      {userProfile?.displayName || user.email?.split('@')[0]}
-                    </span>
-                  </button>
-                  
-                  {/* Dropdown Menu */}
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    <div className="py-1">
-                      <Link
-                        to="/profile"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-primary-600"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <User className="w-4 h-4" />
-                          <span>Profile</span>
-                        </div>
-                      </Link>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <LogOut className="w-4 h-4" />
-                          <span>Sign Out</span>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                {/* Profile Link */}
+                <Link 
+                  to="/profile" 
+                  className="flex items-center space-x-2 text-gray-700 hover:text-primary-600 transition-colors"
+                >
+                  {userProfile?.photoURL ? (
+                    <img 
+                      src={userProfile.photoURL} 
+                      alt="Profile" 
+                      className="w-8 h-8 rounded-full"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 p-2 bg-gray-100 rounded-full" />
+                  )}
+                  <span className="font-medium">
+                    {userProfile?.displayName || user.email?.split('@')[0]}
+                  </span>
+                </Link>
               </>
-            ) : (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/login"
-                  className="text-gray-700 hover:text-primary-600 font-medium"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 font-medium transition-colors"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
+            ) : null}
           </div>
 
           {/* Mobile area */}
@@ -184,14 +141,7 @@ const Navbar = () => {
                   <span className="text-sm font-medium">Profile</span>
                 </Link>
               </>
-            ) : (
-              <Link
-                to="/login"
-                className="text-gray-700 hover:text-primary-600 font-medium text-sm"
-              >
-                Sign In
-              </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
